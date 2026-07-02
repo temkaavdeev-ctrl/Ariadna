@@ -1,74 +1,94 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ариадна — зеркало</title>
+<title>Ариадна</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#0d0f1a">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-:root{--bg:#0d0f1a;--card:#141728;--ink:#e8e4d8;--dim:#8a8fa3;--gold:#d4a54a;--goldhi:#f0cd7e;--ok:#7dbf7d;--bad:#c96f6f}
-*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;padding:14px;max-width:960px;margin:0 auto}
-h1{font-size:19px;font-weight:600;letter-spacing:.4px;margin:6px 0 2px}h1 i{color:var(--gold);font-style:normal}
-.sub{color:var(--dim);font-size:12px;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid #1f2338;border-radius:14px;padding:14px}
-.card h2{font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;font-weight:600}
-.tiles{display:flex;gap:14px;flex-wrap:wrap}.tile b{font-size:22px;color:var(--goldhi);font-weight:600}.tile span{display:block;font-size:11px;color:var(--dim)}
-ul{list-style:none}li{padding:4px 0;border-bottom:1px solid #1d2136;font-size:13px}li:last-child{border:none}
-.p0{color:var(--bad);font-weight:600}.p1{color:var(--goldhi)}.dim{color:var(--dim)}
-.sym{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1d2136;font-size:13px}.sym:last-child{border:none}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px}
-canvas{max-height:150px}
-.thread{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:4px 0 16px;border:none}
+:root{--bg:#0d0f1a;--card:#141728;--ink:#e8e4d8;--dim:#8a8fa3;--gold:#d4a54a;--goldhi:#f0cd7e;--ok:#7dbf7d;--bad:#c96f6f;--line:#1d2136}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;padding:16px;max-width:720px;margin:0 auto}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 0 4px}
+.thread{width:104px;height:104px}
+.thread .sp{transform-origin:52px 52px}
+.working .sp{animation:spin 26s linear infinite}
+.working .core{animation:pulse 2.6s ease-in-out infinite}
+.working .spark{animation:run 3.4s linear infinite;opacity:1}
+.paused .sp,.stale .sp{opacity:.28}.paused .core,.stale .core{opacity:.4}.spark{opacity:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{r:3;opacity:.9}50%{r:5;opacity:1}}
+@keyframes run{0%{offset-distance:0%}100%{offset-distance:100%}}
+h1{font-size:18px;font-weight:600;letter-spacing:.3px;margin-top:6px}h1 i{color:var(--gold);font-style:normal}
+.state{font-size:14px;margin-top:3px}.state b{color:var(--goldhi);font-weight:600}
+.micro{color:var(--dim);font-size:11.5px;margin-top:2px;min-height:16px}
+.age{font-size:11px;margin-top:4px}.age.fresh{color:var(--dim)}.age.old{color:var(--bad)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 6px}
+button{background:#1a1e30;color:var(--ink);border:1px solid #2a2f48;border-radius:11px;padding:10px 15px;font-size:14px;cursor:pointer}
+button:active{transform:scale(.96)}button.gold{border-color:var(--gold);color:var(--goldhi)}
+.card{background:var(--card);border:1px solid #1f2338;border-radius:14px;padding:13px 15px;margin-top:12px}
+.card h2{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:9px;font-weight:600}
+.row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}.row:last-child{border:none}
+.st{font-size:11px;color:var(--dim);white-space:nowrap}.stage{margin-left:auto;font-size:11px;color:var(--goldhi);white-space:nowrap}
+.p0{color:var(--bad);font-weight:600}.p1{color:var(--goldhi)}.dim{color:var(--dim)}.ov{color:var(--bad)}
+.tiles{display:flex;gap:16px;flex-wrap:wrap}.tile b{font-size:20px;color:var(--goldhi)}.tile span{display:block;font-size:11px;color:var(--dim)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1a1e30;border:1px solid var(--gold);color:var(--goldhi);padding:10px 16px;border-radius:11px;font-size:13px;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1}
+details{margin-top:12px}summary{color:var(--dim);font-size:12px;cursor:pointer;padding:6px 0}
+.sym{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}.sym:last-child{border:none}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
+canvas{max-height:120px;margin-top:8px}
+.empty{color:var(--dim);font-size:13px;padding:4px 0}
 </style></head><body>
-<h1>Ариадна <i>· живое зеркало</i></h1>
-<div class="sub" id="at">…</div><hr class="thread">
-<div class="grid">
-<div class="card"><h2>Пульс</h2><div class="tiles">
-<div class="tile"><b id="wt">–</b><span>пробуждений сегодня</span></div>
-<div class="tile"><b id="cf">–</b><span>сбоев за сутки</span></div></div>
-<canvas id="cPulse"></canvas></div>
-<div class="card"><h2>Память</h2><div class="tiles">
-<div class="tile"><b id="kbq">–</b><span>знаний в очереди</span></div>
-<div class="tile"><b id="mem">–</b><span>всего в памяти</span></div>
-<div class="tile"><b id="ppl">–</b><span>досье</span></div></div>
-<canvas id="cMem"></canvas></div>
-<div class="card"><h2>Шина — что в работе</h2><div class="tiles">
-<div class="tile"><b id="bp0" class="p0">–</b><span>срочных</span></div>
-<div class="tile"><b id="bp1">–</b><span>обычных</span></div>
-<div class="tile"><b id="bold">–</b><span>старейшей, ч</span></div></div>
-<ul id="blist"></ul></div>
-<div class="card"><h2>Дела (Todoist)</h2><div class="tiles">
-<div class="tile"><b id="to">–</b><span>открыто</span></div>
-<div class="tile"><b id="tv" class="p0">–</b><span>просрочено</span></div>
-<div class="tile"><b id="td">–</b><span>сделано за 7д</span></div></div></div>
-<div class="card"><h2>Эндосимбионты — впитанные органы</h2><div id="syms"></div></div>
-<div class="card"><h2>Эволюция</h2><div class="tiles">
-<div class="tile"><b id="mg">–</b><span>мутаций (миграций)</span></div>
-<div class="tile"><b id="dc">–</b><span>решений в журнале</span></div></div>
-<canvas id="cEvo"></canvas></div>
-<div class="card" style="grid-column:1/-1"><h2>Лента решений</h2><ul id="dlist"></ul></div>
+<div class="hero" id="hero">
+<svg class="thread" viewBox="0 0 104 104" fill="none">
+<path id="tp" class="sp" d="M52 52 m0 -2 a2 2 0 1 1 -2 2 a5 5 0 1 0 5 -5 a9 9 0 1 1 -9 9 a13.5 13.5 0 1 0 13.5 -13.5 a19 19 0 1 1 -19 19 a25.5 25.5 0 1 0 25.5 -25.5 a33 33 0 1 1 -33 33" stroke="#d4a54a" stroke-width="2.4" stroke-linecap="round"/>
+<circle class="core" cx="52" cy="52" r="3.4" fill="#ffe4a5"/>
+<circle class="spark" r="2.6" fill="#fff2cf"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#tp"/></animateMotion></circle>
+</svg>
+<h1>Ариадна <i>· нить в руках</i></h1>
+<div class="state" id="state">…</div>
+<div class="micro" id="micro"></div>
+<div class="age" id="age"></div>
 </div>
+<div class="btns" id="btns"></div>
+<div class="card"><h2>Поток — вкинул и видно</h2><div id="flow"></div></div>
+<div class="card"><h2>Сейчас важно</h2><div id="prio"></div></div>
+<div class="card"><h2>Напоминания</h2><div id="rem"></div></div>
+<details><summary>▸ Внутренности (мониторинг)</summary>
+<div class="card"><h2>Память</h2><div class="tiles" id="mem"></div><canvas id="cg"></canvas></div>
+<div class="card"><h2>Органы</h2><div id="sym"></div></div>
+<div class="card"><h2>Пульс</h2><div class="tiles" id="pulse"></div></div>
+</details>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
 const API='https://bhpkuhvjutxhzcembctm.supabase.co/functions/v1/dash';
-let K=new URLSearchParams(location.search).get('k')||localStorage.getItem('ak')||'';
-if(K)localStorage.setItem('ak',K);
-const gold='#d4a54a',goldA='rgba(212,165,74,.25)';
-function line(id,pts){new Chart(document.getElementById(id),{type:'line',data:{labels:pts.map(p=>p.d.slice(5)),datasets:[{data:pts.map(p=>p.n),borderColor:gold,backgroundColor:goldA,fill:true,tension:.35,pointRadius:2}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a8fa3',font:{size:10}},grid:{color:'#1d2136'}},y:{ticks:{color:'#8a8fa3',font:{size:10}},grid:{color:'#1d2136'},beginAtZero:true}}}})}
-fetch(API+'?data=1&k='+encodeURIComponent(K)).then(r=>r.json()).then(d=>{
-if(!d){document.getElementById('at').textContent='Нет доступа — открой зеркало по своей ссылке с ключом.';return}
-document.getElementById('at').textContent='снимок: '+new Date(d.at).toLocaleString('ru');
-wt.textContent=d.pulse.wakes_today;cf.textContent=d.pulse.cron_failures_24h;
-kbq.textContent=d.memory.kb_inbox;ppl.textContent=d.memory.people;
-mem.textContent=d.memory.kb_processed+d.memory.signals+d.memory.episodes+d.memory.decisions;
-bp0.textContent=d.bus.open_p0;bp1.textContent=d.bus.open_p1+d.bus.open_rest;bold.textContent=d.bus.oldest_open_h;
-to.textContent=d.todoist.open;tv.textContent=d.todoist.overdue;td.textContent=d.todoist.done_7d;
-mg.textContent=d.evolution.migrations_total;dc.textContent=d.memory.decisions;
-blist.innerHTML=d.bus.open_list.map(x=>'<li><span class="'+(x.p==='P0'?'p0':x.p==='P1'?'p1':'dim')+'">'+x.p+'</span> '+x.s+'</li>').join('')||'<li class="dim">пусто — всё разобрано</li>';
-syms.innerHTML=d.symbionts.map(s=>'<div class="sym"><span><span class="dot" style="background:'+(s.ok?'#7dbf7d':'#c96f6f')+'"></span>'+s.name+'</span><span class="dim">'+(s.last||'—')+'</span></div>').join('');
-dlist.innerHTML=d.evolution.recent_decisions.map(x=>'<li><span class="dim">'+x.t+'</span> · '+x.s+'</li>').join('');
-line('cPulse',d.pulse.dialog_by_day);line('cMem',d.memory.growth_by_day);line('cEvo',d.evolution.migrations_by_day);
-}).catch(()=>{document.getElementById('at').textContent='Не достучалась до организма — попробуй позже.'});
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+let K=new URLSearchParams(location.search).get('k')||localStorage.getItem('ak')||'';if(K)localStorage.setItem('ak',K);
+const $=id=>document.getElementById(id);let chart;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2600)}
+async function cmd(c){toast('…');try{const r=await fetch(API+'?cmd='+c+'&k='+encodeURIComponent(K),{method:'POST'});const j=await r.json();toast(j&&j.result?j.result:'готово');setTimeout(load,600)}catch(e){toast('не вышло')}}
+function esc(s){return(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function render(d){
+ const now=d.alive&&d.alive.now, hero=$('hero');
+ // возраст пульса: свежесть решает, живая анимация или замершая
+ let ageMin=999; if(now&&now.t){const p=now.t.split(':');const dt=new Date();dt.setHours(+p[0],+p[1],0,0);ageMin=Math.max(0,Math.round((Date.now()-dt)/60000));if(ageMin<0)ageMin+=1440}
+ const stale=ageMin>12, paused=d.alive&&d.alive.paused, working=d.alive&&d.alive.working&&!stale&&!paused;
+ hero.className='hero '+(paused?'paused':working?'working':'stale');
+ $('state').innerHTML=paused?'на паузе':(now?('<b>'+esc(now.verb||now.state)+'</b>'+(now.detail?' — '+esc(now.detail):'')):'тихо, жду');
+ $('micro').textContent=(d.alive&&d.alive.micro||[]).slice(0,3).map(m=>m.t+' '+(m.verb||'')+(m.detail?' · '+m.detail:'')).join('   ·   ');
+ const a=$('age'); if(!now){a.textContent='';}else if(stale){a.className='age old';a.textContent='данные '+ageMin+' мин назад — проверяю связь';}else{a.className='age fresh';a.textContent='обновлено '+now.t;}
+ $('btns').innerHTML=(paused?'<button class="gold" onclick="cmd(\'resume\')">Продолжить</button>':'<button onclick="cmd(\'pause\')">Пауза</button>')+
+   '<button class="gold" onclick="cmd(\'wake\')">Разбудить</button><button onclick="cmd(\'todoist\')">Синк дел</button>';
+ const stg=s=>({'принято':'●','в работе':'◐','готово':'✓','сделано':'✓'}[s]||'○');
+ $('flow').innerHTML=(d.flow||[]).slice(0,8).map(f=>'<div class="row"><span class="st">'+f.t+'</span><span>'+esc(f.title)+'</span><span class="stage">'+stg(f.stage)+' '+esc(f.stage)+'</span></div>').join('')||'<div class="empty">пока пусто</div>';
+ $('prio').innerHTML=(d.priorities||[]).map(p=>'<div class="row"><span class="'+(p.p==='P0'?'p0':p.p==='P1'?'p1':'dim')+'">'+p.p+'</span><span>'+esc(p.s)+'</span></div>').join('')||'<div class="empty">чисто</div>';
+ $('rem').innerHTML=(d.reminders||[]).map(r=>'<div class="row"><span>'+esc(r.title)+'</span><span class="stage '+(r.overdue?'ov':'')+'">'+r.due+'</span></div>').join('')||'<div class="empty">нет сроков</div>';
+ const m=d.memory||{};$('mem').innerHTML=[['kb_inbox','в очереди'],['kb_total','знаний'],['people','досье'],['decisions','решений']].map(x=>'<div class="tile"><b>'+(m[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
+ const pl=d.pulse||{};$('pulse').innerHTML=[['wakes_today','пробуждений'],['cron_failures_24h','сбоев/сут']].map(x=>'<div class="tile"><b>'+(pl[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
+ $('sym').innerHTML=(d.symbionts||[]).map(s=>'<div class="sym"><span><span class="dot" style="background:'+(s.ok?'#7dbf7d':'#c96f6f')+'"></span>'+esc(s.name)+'</span><span class="dim">'+(s.last||'—')+'</span></div>').join('');
+ const g=(m.growth_by_day||[]);if(g.length&&window.Chart){if(chart)chart.destroy();chart=new Chart($('cg'),{type:'line',data:{labels:g.map(p=>p.d.slice(5)),datasets:[{data:g.map(p=>p.n),borderColor:'#d4a54a',backgroundColor:'rgba(212,165,74,.22)',fill:true,tension:.35,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a8fa3',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#8a8fa3',font:{size:9}},grid:{color:'#1d2136'},beginAtZero:true}}})}
+}
+async function load(){try{const r=await fetch(API+'?data=1&k='+encodeURIComponent(K));const d=await r.json();if(!d){$('state').textContent='нет доступа — открой по своей ссылке с ключом';return}render(d)}catch(e){$('age').className='age old';$('age').textContent='не достучалась до организма'}}
+load();setInterval(load,10000);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
