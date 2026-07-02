@@ -55,16 +55,15 @@ canvas{max-height:120px;margin-top:8px}
 <div class="card"><h2>Сейчас важно</h2><div id="prio"></div></div>
 <div class="card"><h2>Напоминания</h2><div id="rem"></div></div>
 <details><summary>▸ Внутренности (мониторинг)</summary>
-<div class="card"><h2>Память</h2><div class="tiles" id="mem"></div><canvas id="cg"></canvas></div>
+<div class="card"><h2>Память</h2><div class="tiles" id="mem"></div><div id="cg"></div></div>
 <div class="card"><h2>Органы</h2><div id="sym"></div></div>
 <div class="card"><h2>Пульс</h2><div class="tiles" id="pulse"></div></div>
 </details>
 <div class="toast" id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
 const API='https://bhpkuhvjutxhzcembctm.supabase.co/functions/v1/dash';
 let K=new URLSearchParams(location.search).get('k')||localStorage.getItem('ak')||'';if(K)localStorage.setItem('ak',K);
-const $=id=>document.getElementById(id);let chart;
+const $=id=>document.getElementById(id);
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2600)}
 async function cmd(c){toast('…');try{const r=await fetch(API+'?cmd='+c+'&k='+encodeURIComponent(K),{method:'POST'});const j=await r.json();toast(j&&j.result?j.result:'готово');setTimeout(load,600)}catch(e){toast('не вышло')}}
 function esc(s){return(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
@@ -86,7 +85,10 @@ function render(d){
  const m=d.memory||{};$('mem').innerHTML=[['kb_inbox','в очереди'],['kb_total','знаний'],['people','досье'],['decisions','решений']].map(x=>'<div class="tile"><b>'+(m[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
  const pl=d.pulse||{};$('pulse').innerHTML=[['wakes_today','пробуждений'],['cron_failures_24h','сбоев/сут']].map(x=>'<div class="tile"><b>'+(pl[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
  $('sym').innerHTML=(d.symbionts||[]).map(s=>'<div class="sym"><span><span class="dot" style="background:'+(s.ok?'#7dbf7d':'#c96f6f')+'"></span>'+esc(s.name)+'</span><span class="dim">'+(s.last||'—')+'</span></div>').join('');
- const g=(m.growth_by_day||[]);if(g.length&&window.Chart){if(chart)chart.destroy();chart=new Chart($('cg'),{type:'line',data:{labels:g.map(p=>p.d.slice(5)),datasets:[{data:g.map(p=>p.n),borderColor:'#d4a54a',backgroundColor:'rgba(212,165,74,.22)',fill:true,tension:.35,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a8fa3',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#8a8fa3',font:{size:9}},grid:{color:'#1d2136'},beginAtZero:true}}})}
+ const g=(m.growth_by_day||[]),cg=$('cg');
+ if(g.length){const w=280,h=56,pad=4,mx=Math.max(1,...g.map(p=>p.n)),xs=g.map((_,i)=>pad+i*(w-2*pad)/Math.max(1,g.length-1)),ys=g.map(p=>h-pad-(p.n/mx)*(h-2*pad)),pts=xs.map((x,i)=>x.toFixed(1)+','+ys[i].toFixed(1)).join(' ');
+  cg.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none"><polygon points="'+pad+','+(h-pad)+' '+pts+' '+xs[xs.length-1].toFixed(1)+','+(h-pad)+'" fill="rgba(212,165,74,.22)"/><polyline points="'+pts+'" fill="none" stroke="#d4a54a" stroke-width="2"/></svg>';
+ } else cg.innerHTML='';
 }
 async function load(){try{const r=await fetch(API+'?data=1&k='+encodeURIComponent(K));const d=await r.json();if(!d){$('state').textContent='нет доступа — открой по своей ссылке с ключом';return}render(d)}catch(e){$('age').className='age old';$('age').textContent='не достучалась до организма'}}
 load();setInterval(load,10000);
