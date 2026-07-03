@@ -21,23 +21,32 @@
 h1{font-size:18px;font-weight:600;letter-spacing:.3px;margin-top:6px}h1 i{color:var(--gold);font-style:normal}
 .state{font-size:14px;margin-top:3px}.state b{color:var(--goldhi);font-weight:600}
 .micro{color:var(--dim);font-size:11.5px;margin-top:2px;min-height:16px}
+.mood{font-size:12.5px;color:var(--dim);margin-top:4px}.mood b{color:var(--goldhi);font-weight:500}
 .age{font-size:11px;margin-top:4px}.age.fresh{color:var(--dim)}.age.old{color:var(--bad)}
 .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 6px}
 button{background:#1a1e30;color:var(--ink);border:1px solid #2a2f48;border-radius:11px;padding:10px 15px;font-size:14px;cursor:pointer}
 button:active{transform:scale(.96)}button.gold{border-color:var(--gold);color:var(--goldhi)}
+button:disabled{opacity:.5}
 .card{background:var(--card);border:1px solid #1f2338;border-radius:14px;padding:13px 15px;margin-top:12px}
 .card h2{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:9px;font-weight:600}
 .row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}.row:last-child{border:none}
 .st{font-size:11px;color:var(--dim);white-space:nowrap}.stage{margin-left:auto;font-size:11px;color:var(--goldhi);white-space:nowrap}
 .p0{color:var(--bad);font-weight:600}.p1{color:var(--goldhi)}.dim{color:var(--dim)}.ov{color:var(--bad)}
 .tiles{display:flex;gap:16px;flex-wrap:wrap}.tile b{font-size:20px;color:var(--goldhi)}.tile span{display:block;font-size:11px;color:var(--dim)}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1a1e30;border:1px solid var(--gold);color:var(--goldhi);padding:10px 16px;border-radius:11px;font-size:13px;opacity:0;transition:.3s;pointer-events:none}
+.hb{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px}
+.hb .nm{width:82px;color:var(--dim);white-space:nowrap}
+.hb .tr{flex:1;height:6px;background:#1a1e30;border-radius:3px;overflow:hidden}
+.hb .fl{height:100%;background:linear-gradient(90deg,#8a6a2e,var(--gold));border-radius:3px;transition:width .6s}
+.hb .vl{width:34px;text-align:right;color:var(--dim);font-size:11px}
+.gene{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}.gene:last-child{border:none}
+.gene b{color:var(--goldhi);font-weight:500}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1a1e30;border:1px solid var(--gold);color:var(--goldhi);padding:10px 16px;border-radius:11px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;max-width:88%;text-align:center}
 .toast.on{opacity:1}
 details{margin-top:12px}summary{color:var(--dim);font-size:12px;cursor:pointer;padding:6px 0}
 .sym{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}.sym:last-child{border:none}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
-canvas{max-height:120px;margin-top:8px}
 .empty{color:var(--dim);font-size:13px;padding:4px 0}
+.hint{color:var(--dim);font-size:11px;margin-top:6px}
 </style></head><body>
 <div class="hero" id="hero">
 <svg class="thread" viewBox="0 0 104 104" fill="none">
@@ -48,12 +57,19 @@ canvas{max-height:120px;margin-top:8px}
 <h1>Ариадна <i>· нить в руках</i></h1>
 <div class="state" id="state">…</div>
 <div class="micro" id="micro"></div>
+<div class="mood" id="mood"></div>
 <div class="age" id="age"></div>
 </div>
 <div class="btns" id="btns"></div>
 <div class="card"><h2>Поток — вкинул и видно</h2><div id="flow"></div></div>
-<div class="card"><h2>Сейчас важно</h2><div id="prio"></div></div>
+<div class="card"><h2>Сейчас важно</h2><div id="prio"></div>
+<div class="hint">Твои поручения мне с детализацией — в Todoist, проект «Ариадна».</div></div>
+<div class="card"><h2>Развитие — что мы растим</h2><div id="dev"></div>
+<div class="hint">Очередь саморазвития из нашей мастерской. Пополняется и саморефлексией.</div></div>
 <div class="card"><h2>Напоминания</h2><div id="rem"></div></div>
+<div class="card"><h2>Состояние — гормоны</h2><div id="horm"></div></div>
+<div class="card"><h2>Характер — живые гены</h2><div id="genes"></div>
+<div class="hint">Гены двигаются твоими словами: «дай дописать», «что так долго», «короче», «подробнее».</div></div>
 <details><summary>▸ Внутренности (мониторинг)</summary>
 <div class="card"><h2>Память</h2><div class="tiles" id="mem"></div><div id="cg"></div></div>
 <div class="card"><h2>Органы</h2><div id="sym"></div></div>
@@ -64,29 +80,42 @@ canvas{max-height:120px;margin-top:8px}
 const API='https://bhpkuhvjutxhzcembctm.supabase.co/functions/v1/dash';
 let K=new URLSearchParams(location.search).get('k')||localStorage.getItem('ak')||'';if(K)localStorage.setItem('ak',K);
 const $=id=>document.getElementById(id);
-function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2600)}
-async function cmd(c){toast('…');try{const r=await fetch(API+'?cmd='+c+'&k='+encodeURIComponent(K),{method:'POST'});const j=await r.json();toast(j&&j.result?j.result:'готово');setTimeout(load,600)}catch(e){toast('не вышло')}}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),3200)}
+async function cmd(c,btn){if(btn)btn.disabled=true;toast('…');try{const r=await fetch(API+'?cmd='+c+'&k='+encodeURIComponent(K),{method:'POST'});const j=await r.json();toast(j&&j.result?j.result:'готово');setTimeout(load,600)}catch(e){toast('не вышло')}finally{if(btn)setTimeout(()=>btn.disabled=false,4000)}}
+function reflect(btn){toast('Начинаю саморефлексию — вернусь в чат с мыслями и задачами.');cmd('reflect',btn)}
 function esc(s){return(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
 function render(d){
  const now=d.alive&&d.alive.now, hero=$('hero');
- // возраст пульса: свежесть решает, живая анимация или замершая
  let ageMin=999; if(now&&now.t){const p=now.t.split(':');const dt=new Date();dt.setHours(+p[0],+p[1],0,0);ageMin=Math.max(0,Math.round((Date.now()-dt)/60000));if(ageMin<0)ageMin+=1440}
  const stale=ageMin>12, paused=d.alive&&d.alive.paused, working=d.alive&&d.alive.working&&!stale&&!paused;
  hero.className='hero '+(paused?'paused':working?'working':'stale');
  $('state').innerHTML=paused?'на паузе':(now?('<b>'+esc(now.verb||now.state)+'</b>'+(now.detail?' — '+esc(now.detail):'')):'тихо, жду');
  $('micro').textContent=(d.alive&&d.alive.micro||[]).slice(0,3).map(m=>m.t+' '+(m.verb||'')+(m.detail?' · '+m.detail:'')).join('   ·   ');
+ $('mood').innerHTML=d.mood&&d.mood.line?('настроение: <b>'+esc(d.mood.line)+'</b>'):'';
  const a=$('age'); if(!now){a.textContent='';}else if(stale){a.className='age old';a.textContent='данные '+ageMin+' мин назад — проверяю связь';}else{a.className='age fresh';a.textContent='обновлено '+now.t;}
- $('btns').innerHTML=(paused?'<button class="gold" onclick="cmd(\'resume\')">Продолжить</button>':'<button onclick="cmd(\'pause\')">Пауза</button>')+
-   '<button class="gold" onclick="cmd(\'wake\')">Разбудить</button><button onclick="cmd(\'todoist\')">Синк дел</button>';
+ $('btns').innerHTML=(paused?'<button class="gold" onclick="cmd(\'resume\',this)">Продолжить</button>':'<button onclick="cmd(\'pause\',this)">Пауза</button>')+
+   '<button class="gold" onclick="cmd(\'wake\',this)">Разбудить</button>'+
+   '<button onclick="cmd(\'todoist\',this)">Синк дел</button>'+
+   '<button class="gold" onclick="reflect(this)">Саморефлексия</button>';
  const stg=s=>({'принято':'●','в работе':'◐','готово':'✓','сделано':'✓'}[s]||'○');
  $('flow').innerHTML=(d.flow||[]).slice(0,8).map(f=>'<div class="row"><span class="st">'+f.t+'</span><span>'+esc(f.title)+'</span><span class="stage">'+stg(f.stage)+' '+esc(f.stage)+'</span></div>').join('')||'<div class="empty">пока пусто</div>';
  $('prio').innerHTML=(d.priorities||[]).map(p=>'<div class="row"><span class="'+(p.p==='P0'?'p0':p.p==='P1'?'p1':'dim')+'">'+p.p+'</span><span>'+esc(p.s)+'</span></div>').join('')||'<div class="empty">чисто</div>';
  $('rem').innerHTML=(d.reminders||[]).map(r=>'<div class="row"><span>'+esc(r.title)+'</span><span class="stage '+(r.overdue?'ov':'')+'">'+r.due+'</span></div>').join('')||'<div class="empty">нет сроков</div>';
+ $('dev').innerHTML=(d.dev||[]).map(t=>'<div class="row"><span class="'+(t.p==='P0'?'p0':t.p==='P1'?'p1':'dim')+'">'+t.p+'</span><span>'+esc(t.s)+'</span><span class="stage">'+esc(t.st)+'</span></div>').join('')||'<div class="empty">очередь пуста</div>';
+ const hm=(d.mood&&d.mood.hormones)||[];
+ $('horm').innerHTML=hm.length?hm.map(h=>'<div class="hb"><span class="nm">'+esc(h.name)+'</span><span class="tr"><span class="fl" style="width:'+Math.round((h.level||0)*100)+'%"></span></span><span class="vl">'+Math.round((h.level||0)*100)+'</span></div>').join(''):'<div class="empty">спокойно</div>';
+ const g=d.genes||null;
+ $('genes').innerHTML=g?(
+   '<div class="gene"><span>Жду перед ответом</span><b>'+((g.seg_quiet_ms||0)/1000).toFixed(1)+' с</b></div>'+
+   '<div class="gene"><span>Многословие</span><b>'+(g.verbosity!=null?(+g.verbosity).toFixed(1):'—')+'</b></div>'+
+   '<div class="gene"><span>Поспешила / ждала зря</span><b>'+(g.too_early_n||0)+' / '+(g.lone_n||0)+'</b></div>'+
+   '<div class="gene"><span>Похвалы / поправки</span><b>'+(g.praise_n||0)+' / '+(g.scold_n||0)+'</b></div>'
+ ):'<div class="empty">гены ещё не проросли</div>';
  const m=d.memory||{};$('mem').innerHTML=[['kb_inbox','в очереди'],['kb_total','знаний'],['people','досье'],['decisions','решений']].map(x=>'<div class="tile"><b>'+(m[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
  const pl=d.pulse||{};$('pulse').innerHTML=[['wakes_today','пробуждений'],['cron_failures_24h','сбоев/сут']].map(x=>'<div class="tile"><b>'+(pl[x[0]]??'–')+'</b><span>'+x[1]+'</span></div>').join('');
  $('sym').innerHTML=(d.symbionts||[]).map(s=>'<div class="sym"><span><span class="dot" style="background:'+(s.ok?'#7dbf7d':'#c96f6f')+'"></span>'+esc(s.name)+'</span><span class="dim">'+(s.last||'—')+'</span></div>').join('');
- const g=(m.growth_by_day||[]),cg=$('cg');
- if(g.length){const w=280,h=56,pad=4,mx=Math.max(1,...g.map(p=>p.n)),xs=g.map((_,i)=>pad+i*(w-2*pad)/Math.max(1,g.length-1)),ys=g.map(p=>h-pad-(p.n/mx)*(h-2*pad)),pts=xs.map((x,i)=>x.toFixed(1)+','+ys[i].toFixed(1)).join(' ');
+ const gr=(m.growth_by_day||[]),cg=$('cg');
+ if(gr.length){const w=280,h=56,pad=4,mx=Math.max(1,...gr.map(p=>p.n)),xs=gr.map((_,i)=>pad+i*(w-2*pad)/Math.max(1,gr.length-1)),ys=gr.map(p=>h-pad-(p.n/mx)*(h-2*pad)),pts=xs.map((x,i)=>x.toFixed(1)+','+ys[i].toFixed(1)).join(' ');
   cg.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none"><polygon points="'+pad+','+(h-pad)+' '+pts+' '+xs[xs.length-1].toFixed(1)+','+(h-pad)+'" fill="rgba(212,165,74,.22)"/><polyline points="'+pts+'" fill="none" stroke="#d4a54a" stroke-width="2"/></svg>';
  } else cg.innerHTML='';
 }
